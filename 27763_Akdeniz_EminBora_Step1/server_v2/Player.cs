@@ -2,15 +2,15 @@
 
 public class Player
 {
-    public string player_name { get; set; }
+    public string playerName { get; set; }
     public Socket socket { get; set; }
 
-    public double score;
-    public Player(string player_name, Socket socket)
+    public double playerScore;
+    public Player(string userName, Socket socket)
     {
-        this.player_name = player_name;
+        this.playerName = userName;
         this.socket = socket;
-        this.score = 0;
+        this.playerScore = 0;
     }
 }
 
