@@ -33,10 +33,10 @@
             this.port_label = new System.Windows.Forms.Label();
             this.numberofQs = new System.Windows.Forms.Label();
             this.listen_button = new System.Windows.Forms.Button();
-            this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.richTextBox2 = new System.Windows.Forms.RichTextBox();
+            this.logs = new System.Windows.Forms.RichTextBox();
+            this.scoreboard = new System.Windows.Forms.RichTextBox();
             this.score_board = new System.Windows.Forms.Label();
-            this.logs = new System.Windows.Forms.Label();
+            this.logs_txt = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // port_tb
@@ -56,11 +56,12 @@
             // port_label
             // 
             this.port_label.AutoSize = true;
-            this.port_label.Location = new System.Drawing.Point(13, 44);
+            this.port_label.Location = new System.Drawing.Point(27, 41);
             this.port_label.Name = "port_label";
             this.port_label.Size = new System.Drawing.Size(26, 13);
             this.port_label.TabIndex = 2;
             this.port_label.Text = "Port";
+            this.port_label.Click += new System.EventHandler(this.port_label_Click);
             // 
             // numberofQs
             // 
@@ -82,21 +83,21 @@
             this.listen_button.UseVisualStyleBackColor = true;
             this.listen_button.Click += new System.EventHandler(this.listen_button_Click);
             // 
-            // richTextBox1
+            // logs
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(319, 38);
-            this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(225, 372);
-            this.richTextBox1.TabIndex = 5;
-            this.richTextBox1.Text = "";
+            this.logs.Location = new System.Drawing.Point(319, 38);
+            this.logs.Name = "logs";
+            this.logs.Size = new System.Drawing.Size(225, 372);
+            this.logs.TabIndex = 5;
+            this.logs.Text = "";
             // 
-            // richTextBox2
+            // scoreboard
             // 
-            this.richTextBox2.Location = new System.Drawing.Point(30, 227);
-            this.richTextBox2.Name = "richTextBox2";
-            this.richTextBox2.Size = new System.Drawing.Size(196, 183);
-            this.richTextBox2.TabIndex = 6;
-            this.richTextBox2.Text = "";
+            this.scoreboard.Location = new System.Drawing.Point(30, 227);
+            this.scoreboard.Name = "scoreboard";
+            this.scoreboard.Size = new System.Drawing.Size(196, 183);
+            this.scoreboard.TabIndex = 6;
+            this.scoreboard.Text = "";
             // 
             // score_board
             // 
@@ -107,24 +108,24 @@
             this.score_board.TabIndex = 7;
             this.score_board.Text = "Score Board";
             // 
-            // logs
+            // logs_txt
             // 
-            this.logs.AutoSize = true;
-            this.logs.Location = new System.Drawing.Point(316, 22);
-            this.logs.Name = "logs";
-            this.logs.Size = new System.Drawing.Size(30, 13);
-            this.logs.TabIndex = 8;
-            this.logs.Text = "Logs";
+            this.logs_txt.AutoSize = true;
+            this.logs_txt.Location = new System.Drawing.Point(316, 22);
+            this.logs_txt.Name = "logs_txt";
+            this.logs_txt.Size = new System.Drawing.Size(30, 13);
+            this.logs_txt.TabIndex = 8;
+            this.logs_txt.Text = "Logs";
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(570, 450);
-            this.Controls.Add(this.logs);
+            this.Controls.Add(this.logs_txt);
             this.Controls.Add(this.score_board);
-            this.Controls.Add(this.richTextBox2);
-            this.Controls.Add(this.richTextBox1);
+            this.Controls.Add(this.scoreboard);
+            this.Controls.Add(this.logs);
             this.Controls.Add(this.listen_button);
             this.Controls.Add(this.numberofQs);
             this.Controls.Add(this.port_label);
@@ -144,10 +145,10 @@
         private System.Windows.Forms.Label port_label;
         private System.Windows.Forms.Label numberofQs;
         private System.Windows.Forms.Button listen_button;
-        private System.Windows.Forms.RichTextBox richTextBox1;
-        private System.Windows.Forms.RichTextBox richTextBox2;
+        private System.Windows.Forms.RichTextBox logs;
+        private System.Windows.Forms.RichTextBox scoreboard;
         private System.Windows.Forms.Label score_board;
-        private System.Windows.Forms.Label logs;
+        private System.Windows.Forms.Label logs_txt;
     }
 }
 
