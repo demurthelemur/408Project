@@ -11,12 +11,13 @@ namespace server_v2.include
         public bool quizStarted;
         public bool questionFinished;
         Dictionary<string, int> questionAndAnswers;
-        private int questionNo = 0;
+        public int questionNo = 0;
         private string questionText = " ";
         private System.Windows.Forms.RichTextBox logs;
         private System.Windows.Forms.RichTextBox scoreboard;
         List<Player> playerList;
         private static readonly object QuizLock = new object();
+        public static Dictionary<Player, int> AnswersList = new Dictionary<Player, int>();
 
         private bool terminating;
 
@@ -64,21 +65,103 @@ namespace server_v2.include
 
             while(!terminating && !answerRecieved)
             {
-                if(quizStarted)
+                try
                 {
-                    buffer = new Byte[256];
-                    currentPlayer.socket.Receive(buffer);
-                    string answer = Encoding.Default.GetString(buffer);
-                    if (answer != null)
+                    if (quizStarted)
                     {
-                        lock(QuizLock)
+                        buffer = new Byte[256];
+                        currentPlayer.socket.Receive(buffer);
+                        string answer = Encoding.Default.GetString(buffer);
+                        if (answer != null)
                         {
-                            // TODO: 
+                            lock (QuizLock)
+                            {
+                                answer = answer.Trim('\n');
+                                if (answer.Length > 0)
+                                {
+                                    logs.AppendText(currentPlayer.playerName + ": " + answer + '\n');
+                                }
+                                answerRecieved = true;
+                                questionFinished = true;
+
+                                AnswersList.Add(currentPlayer, Int32.Parse(answer));
+                            }
                         }
+
                     }
+                } catch
+                {
 
                 }
+
             }
+        }
+
+        public void checkAnswers()
+        {   
+            int numberOfCorrectAnswers = 0;
+            int answer = questionAndAnswers[questionText];
+            foreach (var PA in AnswersList)
+            {
+                if (PA.Value == answer)
+                {
+                    PA.Key.didAnswerCorrect = true;
+                    numberOfCorrectAnswers++;  
+                } 
+                else
+                {
+                    PA.Key.didAnswerCorrect = false;
+                }
+            }
+            if (numberOfCorrectAnswers > 1)
+            {
+                foreach (Player P in playerList)
+                {
+                    if (P.didAnswerCorrect)
+                    {
+                        P.playerScore += 0.5;
+                    }
+                    logs.AppendText("The Round was a tie\n");
+                }
+            }
+            else if (numberOfCorrectAnswers == 1)
+            {
+                foreach (Player P in playerList)
+                {
+                    if (P.didAnswerCorrect)
+                    {
+                        P.playerScore += 1;
+                        logs.AppendText(P.playerName + "Won this round\n");
+                    }
+                }
+            }
+            else
+            {
+                logs.AppendText("There is no win of this round.\n"); 
+            }
+            scoreboard.AppendText("----Current Scores---\n");
+            foreach (Player P in playerList)
+            {
+                scoreboard.AppendText(P.playerName + ": " + P.playerScore + '\n');
+            }
+        }
+
+        public void EndGame()
+        {
+            double max = 0;
+            string currentWinner = "";
+
+            foreach (Player P in playerList)
+            {
+                if (P.playerScore > max)
+                {
+                    max = P.playerScore;
+                    currentWinner = P.playerName;
+                }
+            }
+
+            logs.AppendText("The Winner is: " + currentWinner);
+            playerList.Clear();
         }
     }
 }

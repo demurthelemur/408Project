@@ -9,6 +9,8 @@ public class Player
     public Socket socket { get; set; }
 
     public double playerScore;
+
+    public bool didAnswerCorrect = true;
     public Player(string userName, Socket socket)
     {
         this.playerName = userName;

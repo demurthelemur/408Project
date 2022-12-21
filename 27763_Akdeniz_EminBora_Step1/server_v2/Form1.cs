@@ -97,7 +97,32 @@ namespace server_v2
 
                         while (quizStarted)
                         {
-                            quiz.startQuiz(playerList);
+                            lock (Lock)
+                            {
+                                quiz.startQuiz(playerList);
+                            }
+
+                            foreach(Player player in playerList)
+                            {
+                                Thread receiveAnswerThread = new Thread(() => quiz.recieveAnswer(player));
+                                receiveAnswerThread.Start();
+                            }
+
+                            while (Quiz.AnswersList.Count != playerList.Count)
+                            {
+
+                            }
+
+                            questionFinished = false;
+                            quiz.questionFinished = false;
+                            quiz.checkAnswers();
+                            quiz.questionNo += 1;
+                            if (quiz.questionNo == numOfQuestions)
+                            {
+                                quizStarted = false;
+                                quiz.EndGame();
+                                playerList.Clear();
+                            }
                         }
                         
                     }
