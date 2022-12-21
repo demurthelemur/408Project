@@ -20,16 +20,22 @@ namespace server_v2
         Socket serverSocket;
         List<Player> playerList = new List<Player>();
         private int numOfQuestions = 0;
-        
+
         bool terminating = false;
         bool listening = false;
+        bool quizStarted = false;
+        bool questionFinished = false;
 
+        private static readonly object Lock = new object();
+
+        Quiz quiz;
         QuestionsandAnswers QandA = new QuestionsandAnswers();
         public Form1()
         {
             Control.CheckForIllegalCrossThreadCalls = false;
             this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
             QandA.addQandAtoDictionary();
+            quiz = new Quiz(QandA.QandADictionary, logs, scoreboard, quizStarted, questionFinished, terminating);
             InitializeComponent();
         }
 
@@ -77,9 +83,28 @@ namespace server_v2
                     Player tempPlayer = Player.createNewPlayer(newPlayer);
                     logs.AppendText("A new player with the name: " + tempPlayer.playerName + " has connected to the server.\n");
                     playerList.Add(tempPlayer);
-                    numberofQs = Int32.Parse(numberofQs_tb.Text);
+                    numOfQuestions = Int32.Parse(numberofQs_tb.Text);
+                    if (numOfQuestions > 0 && playerList.Count >= 2)
+                    {
+                        foreach (Player player in playerList)
+                        {
+                            scoreboard.AppendText(player.playerName + ": " + player.playerScore);
+                        }
+                        quizStarted = true;
+                        questionFinished = true;
+                        quiz.questionFinished = true;
+                        quiz.quizStarted = true;
 
-                } catch
+                        while (quizStarted)
+                        {
+                            quiz.startQuiz(playerList);
+                        }
+                        
+                    }
+                    
+
+                } 
+                catch
                 {
 
                 }
