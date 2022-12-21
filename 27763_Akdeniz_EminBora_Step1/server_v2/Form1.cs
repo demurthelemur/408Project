@@ -18,7 +18,7 @@ namespace server_v2
     public partial class Form1 : Form
     {
         Socket serverSocket;
-
+        List<Player> playerList = new List<Player>();
         private int numOfQuestions = 0;
         
         bool terminating = false;
@@ -52,8 +52,8 @@ namespace server_v2
                     listening = true;
                     listen_button.Enabled = false;
 
-                    Thread acceptThread = new Thread(Accept);
-                    acceptThread.Start();
+                    //Thread acceptThread = new Thread(Accept);
+                    //acceptThread.Start();
                     logs.AppendText("Started listening on port: " + serverPort + ".\n");
                 }
                 else
@@ -66,6 +66,26 @@ namespace server_v2
                 logs.AppendText("Please enter a valid port.\n");
             }
         }
+
+        private void Accept()
+        {
+            while (listening)
+            {
+                try
+                {
+                    Socket newPlayer = serverSocket.Accept();
+                    Player tempPlayer = Player.createNewPlayer(newPlayer);
+                    logs.AppendText("A new player with the name: " + tempPlayer.playerName + " has connected to the server.\n");
+                    playerList.Add(tempPlayer);
+                    numberofQs = Int32.Parse(numberofQs_tb.Text);
+
+                } catch
+                {
+
+                }
+            }
+        }
+
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             listening = false;
