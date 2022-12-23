@@ -45,6 +45,7 @@
             this.port_tb.Name = "port_tb";
             this.port_tb.Size = new System.Drawing.Size(131, 20);
             this.port_tb.TabIndex = 0;
+            this.port_tb.TextChanged += new System.EventHandler(this.port_tb_TextChanged);
             // 
             // numberofQs_tb
             // 

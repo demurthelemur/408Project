@@ -58,8 +58,8 @@ namespace server_v2
                     listening = true;
                     listen_button.Enabled = false;
 
-                    //Thread acceptThread = new Thread(Accept);
-                    //acceptThread.Start();
+                    Thread acceptThread = new Thread(Accept);
+                    acceptThread.Start();
                     logs.AppendText("Started listening on port: " + serverPort + ".\n");
                 }
                 else
@@ -108,11 +108,7 @@ namespace server_v2
                                 receiveAnswerThread.Start();
                             }
 
-                            while (Quiz.AnswersList.Count != playerList.Count)
-                            {
-
-                            }
-
+                            while (Quiz.AnswersList.Count != playerList.Count) ;
                             questionFinished = false;
                             quiz.questionFinished = false;
                             quiz.checkAnswers();
@@ -122,7 +118,10 @@ namespace server_v2
                                 quizStarted = false;
                                 quiz.EndGame();
                                 playerList.Clear();
+                                serverSocket.Close();
+                                listen_button.Enabled = true;
                             }
+                            Quiz.AnswersList = new Dictionary<Player, int>();
                         }
                         
                     }
@@ -131,7 +130,14 @@ namespace server_v2
                 } 
                 catch
                 {
-
+                    if (terminating)
+                    {
+                        listening = false;
+                    }
+                    else
+                    {
+                        logs.AppendText("The socket stopped working.\n");
+                    }
                 }
             }
         }
@@ -150,6 +156,11 @@ namespace server_v2
         }
 
         private void port_label_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void port_tb_TextChanged(object sender, EventArgs e)
         {
 
         }

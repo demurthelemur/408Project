@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace server_v2.include
 {
@@ -89,7 +91,8 @@ namespace server_v2.include
                         }
 
                     }
-                } catch
+                } 
+                catch
                 {
 
                 }
@@ -159,9 +162,23 @@ namespace server_v2.include
                     currentWinner = P.playerName;
                 }
             }
-
+            
             logs.AppendText("The Winner is: " + currentWinner);
             playerList.Clear();
+
+            string informative = "Game has ended, " + currentWinner + " is the winner.";
+            Byte[] buffer = Encoding.Default.GetBytes(informative);
+            lock(QuizLock)
+            {
+                foreach (Player P in playerList)
+                {
+                    P.socket.Send(buffer);
+                    P.socket.Disconnect(false);
+                }
+            }
+            terminating = true;
+            scoreboard.Text = "";
+            questionNo = 0;
         }
     }
 }
