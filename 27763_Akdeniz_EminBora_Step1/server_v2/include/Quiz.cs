@@ -38,8 +38,12 @@ namespace server_v2.include
             playerList = playerListExternal;
             if (questionFinished)
             {
-                sendQuestion();
-                questionFinished = false;
+                lock(QuizLock)
+                {
+                    sendQuestion();
+                    questionFinished = false;
+                }
+                
             }
         }
 
@@ -53,7 +57,8 @@ namespace server_v2.include
                 try
                 {
                     player.socket.Send(buffer);
-                } catch
+                }
+                catch
                 {
                     logs.AppendText("An error has occured \n");
                 }
@@ -65,7 +70,7 @@ namespace server_v2.include
             Byte[] buffer = new Byte[256];
             bool answerRecieved = false;
 
-            while(!terminating && !answerRecieved)
+            while (!terminating && !answerRecieved)
             {
                 try
                 {
@@ -91,17 +96,23 @@ namespace server_v2.include
                         }
 
                     }
-                } 
+                }
                 catch
                 {
-
+                    if(!terminating)
+                    {
+                        logs.AppendText(currentPlayer.playerName + "has disconnected.\n");
+                        quizStarted = false;
+                        currentPlayer.socket.Close();
+                        playerList.Remove(currentPlayer);
+                    }
                 }
 
             }
         }
 
         public void checkAnswers()
-        {   
+        {
             int numberOfCorrectAnswers = 0;
             int answer = questionAndAnswers[questionText];
             foreach (var PA in AnswersList)
@@ -109,8 +120,8 @@ namespace server_v2.include
                 if (PA.Value == answer)
                 {
                     PA.Key.didAnswerCorrect = true;
-                    numberOfCorrectAnswers++;  
-                } 
+                    numberOfCorrectAnswers++;
+                }
                 else
                 {
                     PA.Key.didAnswerCorrect = false;
@@ -140,7 +151,7 @@ namespace server_v2.include
             }
             else
             {
-                logs.AppendText("There is no win of this round.\n"); 
+                logs.AppendText("There is no win of this round.\n");
             }
             scoreboard.AppendText("----Current Scores---\n");
             foreach (Player P in playerList)
@@ -162,13 +173,13 @@ namespace server_v2.include
                     currentWinner = P.playerName;
                 }
             }
-            
+
             logs.AppendText("The Winner is: " + currentWinner);
             playerList.Clear();
 
             string informative = "Game has ended, " + currentWinner + " is the winner.";
             Byte[] buffer = Encoding.Default.GetBytes(informative);
-            lock(QuizLock)
+            lock (QuizLock)
             {
                 foreach (Player P in playerList)
                 {
@@ -181,4 +192,6 @@ namespace server_v2.include
             questionNo = 0;
         }
     }
+    
+
 }

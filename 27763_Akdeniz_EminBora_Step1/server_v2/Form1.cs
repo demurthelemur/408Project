@@ -80,15 +80,18 @@ namespace server_v2
                 try
                 {
                     Socket newPlayer = serverSocket.Accept();
-                    Player tempPlayer = Player.createNewPlayer(newPlayer);
-                    logs.AppendText("A new player with the name: " + tempPlayer.playerName + " has connected to the server.\n");
-                    playerList.Add(tempPlayer);
+                    lock (Lock)
+                    {
+                        Player tempPlayer = Player.createNewPlayer(newPlayer);
+                        logs.AppendText("A new player with the name: " + tempPlayer.playerName + " has connected to the server.\n");
+                        playerList.Add(tempPlayer);
+                    }
                     numOfQuestions = Int32.Parse(numberofQs_tb.Text);
                     if (numOfQuestions > 0 && playerList.Count >= 2)
                     {
                         foreach (Player player in playerList)
                         {
-                            scoreboard.AppendText(player.playerName + ": " + player.playerScore);
+                            scoreboard.AppendText(player.playerName + ": " + player.playerScore + "\n");
                         }
                         quizStarted = true;
                         questionFinished = true;
@@ -109,8 +112,7 @@ namespace server_v2
                             }
 
                             while (Quiz.AnswersList.Count != playerList.Count) ;
-                            questionFinished = false;
-                            quiz.questionFinished = false;
+                            quiz.questionFinished = true;
                             quiz.checkAnswers();
                             quiz.questionNo += 1;
                             if (quiz.questionNo == numOfQuestions)
