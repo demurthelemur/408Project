@@ -19,6 +19,7 @@ namespace server_v2
     {
         Socket serverSocket;
         List<Player> playerList = new List<Player>();
+        List<string> playerNames = new List<string>();
         private int numOfQuestions = 0;
 
         bool terminating = false;
@@ -27,7 +28,9 @@ namespace server_v2
         bool questionFinished = false;
 
         private static readonly object Lock = new object();
-
+        Thread quizThread;
+        public Button listenButton { get { return listen_button; } }
+        public RichTextBox log { get { return logs; } }
         Quiz quiz;
         QuestionsandAnswers QandA = new QuestionsandAnswers();
         public Form1()
@@ -46,6 +49,7 @@ namespace server_v2
             
             int serverPort;
             terminating = false;
+            start_game_button.Enabled = true;
             if (Int32.TryParse(port_tb.Text, out serverPort))
             {
                 if (Int32.TryParse(numberofQs_tb.Text, out numOfQuestions))
@@ -57,7 +61,8 @@ namespace server_v2
 
                     listening = true;
                     listen_button.Enabled = false;
-
+                    port_tb.Enabled = false;
+                    numberofQs_tb.Enabled = false;
                     Thread acceptThread = new Thread(Accept);
                     acceptThread.Start();
                     logs.AppendText("Started listening on port: " + serverPort + ".\n");
@@ -82,9 +87,17 @@ namespace server_v2
                     Socket newPlayer = serverSocket.Accept();
                     lock (Lock)
                     {
+                        
                         Player tempPlayer = Player.createNewPlayer(newPlayer);
-                        logs.AppendText("A new player with the name: " + tempPlayer.playerName + " has connected to the server.\n");
-                        playerList.Add(tempPlayer);
+                        
+                        if (playerNames.Contains(tempPlayer.playerName)) { return; }
+                        else
+                        {
+                            logs.AppendText("A new player with the name: " + tempPlayer.playerName + " has connected to the server.\n");
+                            playerList.Add(tempPlayer);
+                            playerNames.Add(tempPlayer.playerName);
+                        }
+
                     }
                     numOfQuestions = Int32.Parse(numberofQs_tb.Text);
                     if (numOfQuestions > 0 && playerList.Count >= 2)
@@ -93,17 +106,10 @@ namespace server_v2
                         {
                             scoreboard.AppendText(player.playerName + ": " + player.playerScore + "\n");
                         }
-                        quizStarted = true;
                         questionFinished = true;
                         quiz.questionFinished = true;
-                        quiz.quizStarted = true;
-
                         while (quizStarted)
                         {
-                            lock (Lock)
-                            {
-                                quiz.startQuiz(playerList);
-                            }
 
                             foreach(Player player in playerList)
                             {
@@ -120,13 +126,13 @@ namespace server_v2
                                 quizStarted = false;
                                 quiz.EndGame();
                                 playerList.Clear();
-                                serverSocket.Close();
-                                listen_button.Enabled = true;
+                                serverSocket.Close();                                
                             }
                             Quiz.AnswersList = new Dictionary<Player, int>();
                         }
                         
                     }
+
                     
 
                 } 
@@ -142,6 +148,7 @@ namespace server_v2
                     }
                 }
             }
+
         }
 
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -166,5 +173,26 @@ namespace server_v2
         {
 
         }
+
+        private void start_game_button_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                
+                if (playerList.Count >= 2)
+                {
+                    
+                    start_game_button.Enabled = false;
+                    quizStarted = true;
+                    quiz.quizStarted = true;                                      
+                    quizThread = new Thread(() => quiz.startQuiz(playerList));
+                    quizThread.Start();
+                }
+            }
+            catch {
+                logs.AppendText("Quiz thread faced a problem.\n");
+            }
+        }
     }
+
 }

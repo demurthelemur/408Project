@@ -20,7 +20,7 @@ namespace server_v2.include
         List<Player> playerList;
         private static readonly object QuizLock = new object();
         public static Dictionary<Player, int> AnswersList = new Dictionary<Player, int>();
-
+        Form1 f;
         private bool terminating;
 
         public Quiz(Dictionary<string, int> questionsAndAnswers, System.Windows.Forms.RichTextBox logs, System.Windows.Forms.RichTextBox scoreboard, bool quizStarted, bool questionFinished, bool terminating)
@@ -50,7 +50,8 @@ namespace server_v2.include
         public void sendQuestion()
         {
             questionText = questionAndAnswers.Keys.ElementAt(questionNo);
-            logs.AppendText(questionText + '\n');
+            Console.WriteLine(questionText);
+            logs.AppendText(questionText + "\n");
             Byte[] buffer = Encoding.Default.GetBytes(questionText);
             foreach (Player player in playerList)
             {
@@ -133,7 +134,7 @@ namespace server_v2.include
                 {
                     if (P.didAnswerCorrect)
                     {
-                        P.playerScore += 0.5;
+                        P.playerScore += 1/numberOfCorrectAnswers;
                     }
                     logs.AppendText("The Round was a tie\n");
                 }
@@ -190,6 +191,7 @@ namespace server_v2.include
             terminating = true;
             scoreboard.Text = "";
             questionNo = 0;
+            f.listenButton.Enabled = true;
         }
     }
     
