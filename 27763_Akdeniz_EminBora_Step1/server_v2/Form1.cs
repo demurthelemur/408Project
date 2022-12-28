@@ -28,7 +28,6 @@ namespace server_v2
         bool questionFinished = false;
 
         private static readonly object Lock = new object();
-        Thread quizThread;
         public Button listenButton { get { return listen_button; } }
         public RichTextBox log { get { return logs; } }
         Quiz quiz;
@@ -38,8 +37,8 @@ namespace server_v2
             Control.CheckForIllegalCrossThreadCalls = false;
             this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
             QandA.addQandAtoDictionary();
-            quiz = new Quiz(QandA.QandADictionary, logs, scoreboard, quizStarted, questionFinished, terminating);
             InitializeComponent();
+            quiz = new Quiz(QandA.QandADictionary, log, scoreboard, quizStarted, questionFinished, terminating, listenButton);
         }
 
 
@@ -108,7 +107,7 @@ namespace server_v2
                         }
                         questionFinished = true;
                         quiz.questionFinished = true;
-                        while (quizStarted)
+                        while (true)
                         {
 
                             foreach(Player player in playerList)
@@ -117,7 +116,7 @@ namespace server_v2
                                 receiveAnswerThread.Start();
                             }
 
-                            while (Quiz.AnswersList.Count != playerList.Count) ;
+                            while (Quiz.AnswersList.Count != playerList.Count);
                             quiz.questionFinished = true;
                             quiz.checkAnswers();
                             quiz.questionNo += 1;
@@ -126,9 +125,10 @@ namespace server_v2
                                 quizStarted = false;
                                 quiz.EndGame();
                                 playerList.Clear();
-                                serverSocket.Close();                                
+                                break;
                             }
                             Quiz.AnswersList = new Dictionary<Player, int>();
+                            quiz.startQuiz(playerList);
                         }
                         
                     }
@@ -183,10 +183,9 @@ namespace server_v2
                 {
                     
                     start_game_button.Enabled = false;
-                    quizStarted = true;
-                    quiz.quizStarted = true;                                      
-                    quizThread = new Thread(() => quiz.startQuiz(playerList));
-                    quizThread.Start();
+                    this.quizStarted = true;
+                    quiz.quizStarted = true;
+                    quiz.startQuiz(playerList);
                 }
             }
             catch {
@@ -194,5 +193,5 @@ namespace server_v2
             }
         }
     }
-
+    
 }

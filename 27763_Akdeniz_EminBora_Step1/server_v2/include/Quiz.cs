@@ -15,15 +15,15 @@ namespace server_v2.include
         Dictionary<string, int> questionAndAnswers;
         public int questionNo = 0;
         private string questionText = " ";
-        private System.Windows.Forms.RichTextBox logs;
-        private System.Windows.Forms.RichTextBox scoreboard;
+        public System.Windows.Forms.RichTextBox logs;
+        public System.Windows.Forms.RichTextBox scoreboard;
         List<Player> playerList;
         private static readonly object QuizLock = new object();
         public static Dictionary<Player, int> AnswersList = new Dictionary<Player, int>();
-        Form1 f;
+        public Button listenButton;
         private bool terminating;
 
-        public Quiz(Dictionary<string, int> questionsAndAnswers, System.Windows.Forms.RichTextBox logs, System.Windows.Forms.RichTextBox scoreboard, bool quizStarted, bool questionFinished, bool terminating)
+        public Quiz(Dictionary<string, int> questionsAndAnswers, System.Windows.Forms.RichTextBox logs, System.Windows.Forms.RichTextBox scoreboard, bool quizStarted, bool questionFinished, bool terminating, Button listenButton)
         {
             this.quizStarted = quizStarted;
             this.questionAndAnswers = questionsAndAnswers;
@@ -31,6 +31,7 @@ namespace server_v2.include
             this.scoreboard = scoreboard;
             playerList = new List<Player>();
             this.terminating = terminating;
+            this.listenButton = listenButton;
         }
 
         public void startQuiz(List<Player> playerListExternal)
@@ -165,6 +166,8 @@ namespace server_v2.include
         {
             double max = 0;
             string currentWinner = "";
+            bool isTie = false;
+            int tieCounter = 0;
 
             foreach (Player P in playerList)
             {
@@ -175,10 +178,34 @@ namespace server_v2.include
                 }
             }
 
-            logs.AppendText("The Winner is: " + currentWinner);
-            playerList.Clear();
+            foreach (Player P in playerList)
+            {
+                if (P.playerScore == max)
+                {
+                    tieCounter++;
+                }
+            }
 
-            string informative = "Game has ended, " + currentWinner + " is the winner.";
+            if (tieCounter == 1)
+            {
+                logs.AppendText("The Winner is: " + currentWinner + '\n');
+                playerList.Clear();
+            }
+            else if (tieCounter >= 2)
+            {
+                logs.AppendText("The Game is a Tie Between: \n");
+                foreach (Player P in playerList)
+                {
+                    if (P.playerScore == max)
+                    {
+                        currentWinner = P.playerName;
+                        logs.AppendText(currentWinner);
+                    }
+                }
+                playerList.Clear();
+            }
+
+            string informative = "Game has ended, " + currentWinner + " is the winner. \n";
             Byte[] buffer = Encoding.Default.GetBytes(informative);
             lock (QuizLock)
             {
@@ -188,10 +215,10 @@ namespace server_v2.include
                     P.socket.Disconnect(false);
                 }
             }
-            terminating = true;
+            terminating = false;
             scoreboard.Text = "";
             questionNo = 0;
-            f.listenButton.Enabled = true;
+            listenButton.Enabled = false;
         }
     }
     
