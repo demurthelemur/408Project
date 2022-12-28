@@ -17,7 +17,7 @@ namespace server_v2.include
         private string questionText = " ";
         public System.Windows.Forms.RichTextBox logs;
         public System.Windows.Forms.RichTextBox scoreboard;
-        List<Player> playerList;
+        public List<Player> playerList;
         private static readonly object QuizLock = new object();
         public static Dictionary<Player, int> AnswersList = new Dictionary<Player, int>();
         public Button listenButton;
@@ -103,10 +103,34 @@ namespace server_v2.include
                 {
                     if(!terminating)
                     {
-                        logs.AppendText(currentPlayer.playerName + "has disconnected.\n");
+                        string winnerName = "";
+                        logs.AppendText(currentPlayer.playerName + " has disconnected.\n");
                         quizStarted = false;
                         currentPlayer.socket.Close();
                         playerList.Remove(currentPlayer);
+                        if (playerList.Count == 1)
+                        {
+                            foreach (Player tempPlayer in playerList)
+                            {
+                                logs.AppendText("All players except for " + tempPlayer.playerName + " left.\n");
+                                logs.AppendText("The Winner is: " + tempPlayer.playerName + '\n');
+                                winnerName = tempPlayer.playerName;
+                            }
+
+                            string informative = "Game has ended, " + winnerName + " is the winner. \n";
+                            Byte[] xbuffer = Encoding.Default.GetBytes(informative);
+
+                            lock (QuizLock)
+                            {
+                                foreach (Player P in playerList)
+                                {
+                                    P.socket.Send(xbuffer);
+                                }
+                            }
+                            scoreboard.Text = "";
+                            questionNo = 0;
+                            listenButton.Enabled = false;
+                        }
                     }
                 }
 
@@ -166,7 +190,6 @@ namespace server_v2.include
         {
             double max = 0;
             string currentWinner = "";
-            bool isTie = false;
             int tieCounter = 0;
 
             foreach (Player P in playerList)
@@ -212,7 +235,6 @@ namespace server_v2.include
                 foreach (Player P in playerList)
                 {
                     P.socket.Send(buffer);
-                    P.socket.Disconnect(false);
                 }
             }
             terminating = false;

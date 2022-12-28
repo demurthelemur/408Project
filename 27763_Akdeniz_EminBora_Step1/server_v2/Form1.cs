@@ -22,6 +22,7 @@ namespace server_v2
         List<string> playerNames = new List<string>();
         private int numOfQuestions = 0;
 
+        int numberofPlayers = 0;    
         bool terminating = false;
         bool listening = false;
         bool quizStarted = false;
@@ -58,6 +59,7 @@ namespace server_v2
                     serverSocket.Bind(endPoint);
                     serverSocket.Listen(2);
 
+                    numberofPlayers = Int32.Parse(numberofPlayers_tb.Text);
                     listening = true;
                     listen_button.Enabled = false;
                     port_tb.Enabled = false;
@@ -99,8 +101,9 @@ namespace server_v2
 
                     }
                     numOfQuestions = Int32.Parse(numberofQs_tb.Text);
-                    if (numOfQuestions > 0 && playerList.Count >= 2)
+                    if (numOfQuestions > 0 && playerList.Count == numberofPlayers)
                     {
+                        
                         foreach (Player player in playerList)
                         {
                             scoreboard.AppendText(player.playerName + ": " + player.playerScore + "\n");
@@ -115,7 +118,10 @@ namespace server_v2
                                 Thread receiveAnswerThread = new Thread(() => quiz.recieveAnswer(player));
                                 receiveAnswerThread.Start();
                             }
-
+                            if(quiz.playerList.Count == 1)
+                            {
+                                break;
+                            }
                             while (Quiz.AnswersList.Count != playerList.Count);
                             quiz.questionFinished = true;
                             quiz.checkAnswers();
@@ -191,6 +197,11 @@ namespace server_v2
             catch {
                 logs.AppendText("Quiz thread faced a problem.\n");
             }
+        }
+
+        private void numberofPlayers_tb_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
     
