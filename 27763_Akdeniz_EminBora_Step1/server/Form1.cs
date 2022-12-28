@@ -39,7 +39,7 @@ namespace server_v2
             this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
             QandA.addQandAtoDictionary();
             InitializeComponent();
-            quiz = new Quiz(QandA.QandADictionary, log, scoreboard, quizStarted, questionFinished, terminating, listenButton);
+            quiz = new Quiz(QandA.QandADictionary, log, scoreboard, quizStarted, questionFinished, terminating, listenButton, start_game_button);
         }
 
 
@@ -136,12 +136,9 @@ namespace server_v2
                             Quiz.AnswersList = new Dictionary<Player, int>();
                             quiz.startQuiz(playerList);
                         }
-                        
                     }
-
-                    
-
-                } 
+                }
+                
                 catch
                 {
                     if (terminating)
@@ -154,7 +151,7 @@ namespace server_v2
                     }
                 }
             }
-
+            
         }
 
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)

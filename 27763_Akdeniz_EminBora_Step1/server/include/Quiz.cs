@@ -22,8 +22,9 @@ namespace server_v2.include
         public static Dictionary<Player, int> AnswersList = new Dictionary<Player, int>();
         public Button listenButton;
         private bool terminating;
+        public Button startGameButton;
 
-        public Quiz(Dictionary<string, int> questionsAndAnswers, System.Windows.Forms.RichTextBox logs, System.Windows.Forms.RichTextBox scoreboard, bool quizStarted, bool questionFinished, bool terminating, Button listenButton)
+        public Quiz(Dictionary<string, int> questionsAndAnswers, System.Windows.Forms.RichTextBox logs, System.Windows.Forms.RichTextBox scoreboard, bool quizStarted, bool questionFinished, bool terminating, Button listenButton, Button startGameButton)
         {
             this.quizStarted = quizStarted;
             this.questionAndAnswers = questionsAndAnswers;
@@ -32,6 +33,7 @@ namespace server_v2.include
             playerList = new List<Player>();
             this.terminating = terminating;
             this.listenButton = listenButton;
+            this.startGameButton = startGameButton;
         }
 
         public void startQuiz(List<Player> playerListExternal)
@@ -130,10 +132,11 @@ namespace server_v2.include
                             scoreboard.Text = "";
                             questionNo = 0;
                             listenButton.Enabled = false;
+                            startGameButton.Enabled = true;
                         }
                     }
                 }
-
+                
             }
         }
 

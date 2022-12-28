@@ -1,164 +1,189 @@
-using Microsoft.VisualBasic.Logging;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml.Linq;
 
 namespace client
 {
     public partial class Form1 : Form
     {
+
         bool terminating = false;
         bool connected = false;
         Socket clientSocket;
-        string name = "";
+
         public Form1()
         {
             Control.CheckForIllegalCrossThreadCalls = false;
             this.FormClosing += new FormClosingEventHandler(Form1_FormClosing);
             InitializeComponent();
-            AnswerText.Enabled = false;
-            SendButton.Enabled = false;
+            answer_textBox.Enabled = true;
+            submit_button.Enabled = false;
         }
-        private void ConnectButton_Click(object sender, EventArgs e)
+
+        private void button_connect_Click(object sender, EventArgs e)
         {
             clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            string IP = IPText.Text;
+            string IP = textBox_ip.Text;
+            string name = name_textBox.Text;
 
             int portNum;
-            if (Int32.TryParse(PortText.Text, out portNum))
+            if(Int32.TryParse(textBox_port.Text, out portNum))
             {
                 try
                 {
-                    //connecting to the server
-                    name = NameText.Text;
                     clientSocket.Connect(IP, portNum);
-                    ConnectButton.Enabled = false;
-                    DisconnectButton.Enabled = true;
-                    AnswerText.Enabled = true;
-                    SendButton.Enabled = true;
+                    button_connect.Enabled = false;
+                    disconnet_button.Enabled = true;
+                    submit_button.Enabled = true;
                     connected = true;
-                    Logs.AppendText("Connection established...\n");
-                    if (name != "" && name.Length <= 64)
+                    logs.AppendText("Connected to the server!\n");
+                    string message = name_textBox.Text;
+                    if (message != "" && message.Length <= 128)
                     {
-                        Byte[] buffer = Encoding.Default.GetBytes(name);
+                        Byte[] buffer = Encoding.Default.GetBytes(message);
                         clientSocket.Send(buffer);
                     }
 
-                    //call recieve function to process the questions and send answers
                     Thread receiveThread = new Thread(Receive);
                     receiveThread.Start();
                 }
                 catch
                 {
-                    Logs.AppendText("Problem occurred while connecting...\n");
+                    logs.AppendText("Could not connect to the server!\n");
                 }
             }
             else
             {
-                Logs.AppendText("Check the port\n");
+                logs.AppendText("Check the port\n");
             }
+
         }
 
         private void Receive()
         {
+            while(connected)
             {
-                while (connected)
+                try
                 {
-                    try
-                    {
-                        Byte[] buffer = new Byte[64];
-                        clientSocket.Receive(buffer);
+                    Byte[] buffer = new Byte[256];
+                    clientSocket.Receive(buffer);
 
-                        //Parse the incomming messages
-                        string incomingMessage = Encoding.Default.GetString(buffer);    
-                        string test = incomingMessage.Substring(0, 16);                 
-                                                                                        
-                        //If the message is "TERMINATE CLIENT" terminate the connection to the server
-                        if (test == "TERMINATE CLIENT")
-                        {
-                            connected = false;
-                            string answer = name + ": Has Disconnected\n";
-                            if (answer != "" && answer.Length <= 64)
-                            {
-                                buffer = Encoding.Default.GetBytes(answer);
-                                clientSocket.Send(buffer);
-                            }
-                            clientSocket.Close();
-                            DisconnectButton.Enabled = false;
-                            ConnectButton.Enabled = true;
-                            AnswerText.Enabled = false;
-                            SendButton.Enabled = false;
-                            Logs.AppendText("Server: Game Ended \n");
-                            break;
-                        }
+                    string incomingMessage = Encoding.Default.GetString(buffer);
+                    incomingMessage = incomingMessage.Trim('\0');
 
-                        //get rid of empty spaces and print the message to logs
-                        incomingMessage = incomingMessage.Trim('\0');
-                        Logs.AppendText("Server: " + incomingMessage + "\n");
-                        SendButton.Enabled = true;
-                    }
-                    catch
+                    if (incomingMessage.Length > 0)
+                        logs.AppendText(incomingMessage + "\n");
+                    if (incomingMessage == "Game has ended" || incomingMessage == "")
                     {
-                        if (!terminating)
-                        {
-                            Logs.AppendText("The server has disconnected\n");
-                            ConnectButton.Enabled = true;
-                            string answer = name + ": Has Disconnected\n";
-                            if (answer != "" && answer.Length <= 64)
-                            {
-                                Byte[] buffer = Encoding.Default.GetBytes(answer);
-                                clientSocket.Send(buffer);
-                            }
-                        }
 
                         clientSocket.Close();
                         connected = false;
+                        logs.AppendText("The server has disconnected\n");
+                        disconnet_button.Enabled = false;
+                        button_connect.Enabled = true;
                     }
                 }
+                catch
+                {
+                    if (!terminating)
+                    {
+                        logs.AppendText("The server has disconnected\n");
+                        button_connect.Enabled = true;
+                    }
+
+                    clientSocket.Close();
+                    connected = false;
+                    disconnet_button.Enabled = false;
+                    button_connect.Enabled = true;
+                }
+
             }
         }
 
-        private void SendButton_Click(object sender, EventArgs e)
-        {
-            //get rid of empty spaces and send the answer to the server
-            string answer = AnswerText.Text;
-            answer.Trim('\0');
-            Logs.AppendText("Answer: " + answer + "\n");
-            answer = name + ": " + answer;
-            if (answer != "" && answer.Length <= 64)
-            {
-                Byte[] buffer = Encoding.Default.GetBytes(answer);
-                clientSocket.Send(buffer);
-            }
-            AnswerText.Text = "";
-            SendButton.Enabled = false;
-        }
-
-        private void Disconnect_Click(object sender, EventArgs e)
-        {
-            //disconnect from the server and print a message accordingly
-            connected = false;
-            terminating = true;
-
-            string answer = name + ": Has Disconnected\n";
-            if (answer != "" && answer.Length <= 64)
-            {
-                Byte[] buffer = Encoding.Default.GetBytes(answer);
-                clientSocket.Send(buffer);
-            }
-            clientSocket.Close();
-            DisconnectButton.Enabled = false;
-            ConnectButton.Enabled = true;
-            AnswerText.Enabled = false;
-            SendButton.Enabled = false;
-            Logs.AppendText("Server: Game Ended \n");
-        }
         private void Form1_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             connected = false;
             terminating = true;
             Environment.Exit(0);
+        }
+
+        private void button_send_Click(object sender, EventArgs e)
+        {
+            string client_name = name_textBox.Text;
+
+            if(client_name != "" && client_name.Length <= 256)
+            {
+                Byte[] buffer = Encoding.Default.GetBytes(client_name);
+                clientSocket.Send(buffer);
+            }
+
+
+        }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void name_textBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void disconnet_button_Click(object sender, EventArgs e)
+        {
+            connected = false;
+            terminating = true;
+
+            string answer = name_textBox.Text + ": Has Disconnected\n";
+            if (answer != "" && answer.Length <= 256)
+            {
+                Byte[] buffer = Encoding.Default.GetBytes(answer);
+                clientSocket.Send(buffer);
+            }
+            clientSocket.Close();
+            disconnet_button.Enabled = false;
+            button_connect.Enabled = true;
+            answer_textBox.Enabled = false;
+            submit_button.Enabled = false;
+            logs.AppendText("Server: Game Ended \n");
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
+        }
+
+        private void answer_textBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void submit_button_Click(object sender, EventArgs e)
+        {
+            string answer = answer_textBox.Text;
+            if (answer != "" && answer.Length <= 256)
+            {
+                Byte[] buffer = Encoding.Default.GetBytes(answer);
+                clientSocket.Send(buffer);
+                logs.AppendText("Answer: " + answer + "\n");
+            }
+
+            
         }
     }
 }
